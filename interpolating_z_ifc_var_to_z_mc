@@ -1,0 +1,23 @@
+# Steps to interpolate an ICON output variable which is defined on z_ifc z-axis to z_mc z-axis
+# This is useful for example to get u,v,w on the same grid. Example is for w here.
+# Uses cdo
+
+# 1. Extract variable, w, u and v, z_ifc and z_mc into separate nc files. 
+cdo selvar,z_mc orig_file.nc z_mc_file.nc
+cdo selvar,z_ifc orig_file.nc z_ifc_file.nc
+cdo selvar,w orig_file.nc w_file.nc
+cdo selvar,u,v orig_file.nc uv_file.nc
+
+# 2.a Write z-axis description from u and v into text file
+cdo zaxisdes uv_file.nc > zaxis_uv.txt
+# 2.b. In text file change zaxis type to "generic"
+
+# 3. Interpolate w onto z_mc 
+# Usage: cdo intlevel3d,new_zaxis.nc var.nc old_zaxis.nc remapped_var.nc
+cdo intlevel3d,z_mc_file.nc w_file.nc z_ifc_file.nc.nc interp_w.nc
+
+# 4. Use z-axis txt file to change descroption of interpolated variable file
+cdo setzaxis,zaxis_uv.txt interp_w.nc w_with_uv_zaxis.nc
+
+# 5. Merge new w and uv files
+cdo merge uv_file.nc w_with_uv_zaxis.nc merged_wind_same_z_axis.nc
